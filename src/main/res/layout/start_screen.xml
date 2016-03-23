@@ -33,16 +33,4 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true" />
 
-    <ImageButton
-        android:layout_width="16dp"
-        android:layout_height="16dp"
-        android:id="@+id/button_sensortag_config"
-        android:src="@drawable/sensortag"
-        android:background="@null"
-        android:maxWidth="16dp"
-        android:maxHeight="16dp"
-        android:layout_margin="10dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true" />
-
 </RelativeLayout>

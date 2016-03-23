@@ -172,41 +172,4 @@ public abstract class SharedTables {
         }
 
     }
-
-
-    /************************************************************************
-     * The following data structure is defined by Phoenix for SensorTag
-     *************************************************************************/
-
-    public static abstract class SensorTag {
-        public static final String KEY_SENSORTAG_ID = "sensortag_id";
-        public static final String KEY_TYPE = "type"; // can be "acc", "mag", "lux", "temp", "gyro"
-        public static final String KEY_READING_ALL = "reading_all"; // for those which doesn't do a componentwise measure
-        public static final String KEY_READING_X = "reading_x"; // for those which does a componentwise measure
-        public static final String KEY_READING_Y = "reading_y";
-        public static final String KEY_READING_Z = "reading_z";
-
-        private static DataManager.Table mTable;
-
-        public static DataManager.Table getTable(DataManager instance) throws Exception {
-            if (mTable == null)
-                mTable = UploaderService.addTable(
-                        instance,
-                        "sensortag",
-                        DeviceLocation.PatientWatch,
-                        new DataManager.TableField(DataManager.KEY_PATIENT_ID, DataManager.Type.Text),
-                        new DataManager.TableField(DataManager.KEY_TIMESTAMP, DataManager.Type.Text),
-                        new DataManager.TableField(DataManager.KEY_IS_COMMITTED, DataManager.Type.Boolean, 0),
-                        new DataManager.TableField(KEY_SENSORTAG_ID, DataManager.Type.Text),
-                        new DataManager.TableField(KEY_TYPE, DataManager.Type.Text),
-                        new DataManager.TableField(KEY_READING_ALL, DataManager.Type.Real),
-                        new DataManager.TableField(KEY_READING_X, DataManager.Type.Real),
-                        new DataManager.TableField(KEY_READING_Y, DataManager.Type.Real),
-                        new DataManager.TableField(KEY_READING_Z, DataManager.Type.Real)
-                );
-            return mTable;
-        }
-    }
-
 }
-

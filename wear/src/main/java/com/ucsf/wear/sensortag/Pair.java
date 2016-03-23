@@ -25,6 +25,12 @@ public class Pair implements Comparable
         return value;
     }
 
+    public BluetoothDevice getKey() {return key;}
+
+    public void setValue(Integer val) {
+        this.value = val;
+    }
+
 
     /**
      * compareTo.
@@ -32,16 +38,26 @@ public class Pair implements Comparable
     @Override
     public int compareTo(Object o)
     {
-        return this.getValue().compareTo(((Pair)o).getValue());
+        //return this.getValue().compareTo(((Pair)o).getValue());
+        return ((Pair)o).getValue().compareTo(this.getValue());
     }
 
     /**
      * toString.
      */
     @Override
+    //TODO: check if it's okay to modify this method
     public String toString()
     {
-        return this.key.getName()+" "+this.value.toString();
+        return this.key.getAddress()+" "+this.value.toString();
     }
 
+    /**
+     * equals
+     */
+    @Override
+    public boolean equals(Object o)
+    {
+        return this.key.getAddress().equals(((Pair) o).getKey().getAddress());
+    }
 }

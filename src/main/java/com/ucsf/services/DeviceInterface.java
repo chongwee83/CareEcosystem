@@ -21,7 +21,6 @@ import com.ucsf.core.services.Messages.Request;
 import com.ucsf.core.services.ServiceId;
 import com.ucsf.core.services.UserMonitoringService;
 import com.ucsf.data.Settings;
-import com.ucsf.ui.admin.SensorTagDBHelper;
 
 import org.json.JSONObject;
 
@@ -158,11 +157,6 @@ public class DeviceInterface extends com.ucsf.core.services.DeviceInterface {
         );
     }
 
-    private static JSONObject getSensortagInfo(Context context) {
-        SensorTagDBHelper myDB = new SensorTagDBHelper(context);
-        return myDB.getJsonFromAllData();
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -197,9 +191,6 @@ public class DeviceInterface extends com.ucsf.core.services.DeviceInterface {
         switch (request) {
             case PATIENT_INFO:
                 replyToRequest(this, request, getPatientInfo(this));
-                break;
-            case SENSORTAG_INFO:
-                replyToRequest(this, request, getSensortagInfo(this));
                 break;
             default:
                 Log.w(TAG, String.format("Unexpected request '%s'!", request.getTag()));

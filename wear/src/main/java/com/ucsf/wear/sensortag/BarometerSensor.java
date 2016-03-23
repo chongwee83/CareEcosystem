@@ -2,7 +2,6 @@ package com.ucsf.wear.sensortag;
 
 import com.ucsf.wear.services.SensorTagMonitoring;
 
-import java.util.ArrayList;
 import java.util.UUID;
 
 import static java.lang.Math.pow;
@@ -49,13 +48,6 @@ public class BarometerSensor extends Sensor
     public String toString()
     {
         return "Pressure(mbar)," +this.pressure+",";
-    }
-
-    @Override
-    public ArrayList<SensorTagReading> getReading() {
-        ArrayList<SensorTagReading> readings = new ArrayList<SensorTagReading>();
-        readings.add(new SensorTagReading("Pressure",this.getAddress(),this.pressure));
-        return readings;
     }
 
 }

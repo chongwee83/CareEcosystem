@@ -16,11 +16,6 @@ public abstract class Settings {
     private static final String                      KEY_VALUE      = "value";
     private static final PersistentParameter<String> mCurrentUserId =
             new PersistentParameter<>("user", "");
-    /* The following two PersistentParameters are added by Phoenix */
-    private static final PersistentParameter<String> mCurrentSensortagIdGroup =
-            new PersistentParameter<>("sensortag_id_group", "");
-    private static final PersistentParameter<String> mCurrentSensortagTypeGroup =
-            new PersistentParameter<>("sensortag_type_group", "");
     private static       DataManager.Table           mSettingsTable = null;
     public         final Context                     context;
 
@@ -83,27 +78,11 @@ public abstract class Settings {
         return mCurrentUserId.get(context);
     }
 
-    public static String getCurrentSensortagIdGroup(Context context) {
-        return mCurrentSensortagIdGroup.get(context);
-    }
-
-    public static String getCurrentSensortagTypeGroup(Context context) {
-        return mCurrentSensortagTypeGroup.get(context);
-    }
-
     /**
      * Binds this application to the user identified by the given unique id.
      */
     public static void setCurrentUserId(Context context, String patientId) {
         mCurrentUserId.set(context, patientId);
-    }
-
-    public static void setCurrentSensortagIdGroup(Context context, String sensortagIdGroup) {
-        mCurrentSensortagIdGroup.set(context, sensortagIdGroup);
-    }
-
-    public static void setCurrentSensortagTypeGroup(Context context, String sensortagTypeGroup) {
-        mCurrentSensortagTypeGroup.set(context, sensortagTypeGroup);
     }
 
     /**

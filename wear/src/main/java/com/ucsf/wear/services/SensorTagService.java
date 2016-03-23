@@ -8,24 +8,26 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.estimote.sdk.Beacon;
 import com.ucsf.core.data.DataManager;
 import com.ucsf.core.data.Entry;
+import com.ucsf.core.data.RSSI;
 import com.ucsf.core.data.SharedTables;
 import com.ucsf.core.data.Timestamp;
 import com.ucsf.core.services.Annotations;
 import com.ucsf.core.services.BackgroundService;
+import com.ucsf.core.services.BeaconMonitoring;
 import com.ucsf.core.services.ServiceId;
 import com.ucsf.core.services.ServiceParameter;
 import com.ucsf.wear.R;
 import com.ucsf.wear.data.Settings;
-import com.ucsf.wear.sensortag.SensorTagReading;
 
 import java.util.List;
 
 /**
- * Service responsible of saving SensorTag readings.
+ * Service responsible of saving beacons RSSI.
  *
- * @author  Chong Wee Tan
+ * @author  Julien Jacquemot
  * @version 1.0
  */
 public class SensorTagService extends BackgroundService implements SensorTagMonitoring.SensorTagListener {
@@ -47,50 +49,27 @@ public class SensorTagService extends BackgroundService implements SensorTagMoni
     }
 
     @Override
-    public void onSensorTagReading(List<SensorTagReading> readings) {
-        // Get sensor readings
-        for (SensorTagReading reading : readings) {
-            String sensorType = reading.getSensorTypeString();
-            String sensorAddress = reading.getSensorAddressString();
-            List<Double> values = reading.getValues();
-            double reading0 = 0, reading1 = 0, reading2 = 0;
-            if(values.size() == 1)
-                reading0 = values.get(0);
-            else if(values.size() == 3)
-            {
-                reading0 = values.get(0);
-                reading1 = values.get(1);
-                reading2 = values.get(2);
-            }
+    public void onSensorTagReading(List<String> readings) {
+        // Get beacons measured power
 
-            Log.d(TAG,sensorAddress + "\t" + sensorType + "\t" + reading0 + "\t" + reading1 + "\t" + reading2);
-
-            //Put the sensor readings into the database
-            try (DataManager instance = DataManager.get(this)) {
-                SharedTables.SensorTag.getTable(instance).add(
-                        new Entry(DataManager.KEY_PATIENT_ID    , Settings.getCurrentUserId(this)),
-                        new Entry(DataManager.KEY_TIMESTAMP     , Timestamp.getTimestamp()),
-                        new Entry(SharedTables.SensorTag.KEY_SENSORTAG_ID, sensorAddress),
-                        new Entry(SharedTables.SensorTag.KEY_TYPE, sensorType),
-                        new Entry(SharedTables.SensorTag.KEY_READING_ALL, reading0),
-                        new Entry(SharedTables.SensorTag.KEY_READING_X, reading0),
-                        new Entry(SharedTables.SensorTag.KEY_READING_Y, reading1),
-                        new Entry(SharedTables.SensorTag.KEY_READING_Z, reading2)
-                );
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to get sensortag reading: ", e);
-            }
+        // Put the sensor readings into the database
+        try (DataManager instance = DataManager.get(this)) {
+            SharedTables.Estimote.getTable(instance).add(
+                    new Entry(DataManager.KEY_PATIENT_ID    , Settings.getCurrentUserId(this)),
+                    new Entry(DataManager.KEY_TIMESTAMP     , Timestamp.getTimestamp()),
+                    new Entry(SharedTables.Estimote.KEY_RSSI, "", true)
+            );
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to save beacons RSSI: ", e);
         }
-
     }
-
 
     @Override
     protected void onStart() throws Exception {
         Log.d(TAG, "onStart()");
         Provider provider = getProvider();
         mSensorTagMonitor = new SensorTagMonitoring();
-        mSensorTagMonitor.addSensorTagListener(this);
+        mSensorTagMonitor.addRangingListener(this);
         mSensorTagMonitor.startMonitoring(this);
 
         //display foreground notification
@@ -113,14 +92,12 @@ public class SensorTagService extends BackgroundService implements SensorTagMoni
 
         startForeground(54330216, notification);
 
-        ////////////////////////////////////////////////////
-        getSensortagConfig();
     }
 
     @Override
     protected void onStop() {
         mSensorTagMonitor.stopMonitoring();
-        mSensorTagMonitor.removeSensorTagListener(this);
+        mSensorTagMonitor.removeRangingListener(this);
 
         //remove foreground notification
         stopForeground(true);
@@ -129,32 +106,52 @@ public class SensorTagService extends BackgroundService implements SensorTagMoni
 
     }
 
-    public void getSensortagConfig() {
-        DeviceInterface.requestSensortagInfo(this.getApplicationContext());
-        //What else do you want to do???
-    }
-
     /**
      * Ranging service provider class.
      */
     public static class Provider extends BackgroundService.Provider {
+        private final ServiceParameter<Long> mIndoorWaitPeriod;
+        private final ServiceParameter<Long> mOutdoorWaitPeriod;
+        private final ServiceParameter<Long> mScanPeriod;
 
         private Provider(Context context) {
             super(context, SensorTagService.class, ServiceId.PW_SensorTagService);
+
+            mIndoorWaitPeriod = addParameter("INDOOR_WAIT_PERIOD",
+                    R.string.parameter_indoor_wait_period, 60000L);
+            mOutdoorWaitPeriod = addParameter("OUTDOOR_WAIT_PERIOD",
+                    R.string.parameter_outdoor_wait_period, 300000L);
+            mScanPeriod = addParameter("SCAN_PERIOD",
+                    R.string.parameter_scan_period, 6000L);
         }
 
         /**
-         * Changes the sensortag scan interval depending on if the patient is at home or not.
+         * Changes the ranging interval depending on if the patient is at home or not.
          */
         @Annotations.MappedMethod(KEY_UPDATE_RANGING_INTERVAL)
         public void setIndoorMode(boolean enable) {
-
+            /*
             if (enable) {
-                mSensorTagMonitor.startMonitoring(super.context);
+                SensorTagMonitoring.resetMonitoringPeriods(mIndoorWaitPeriod.get(),
+                        mScanPeriod.get());
             } else {
-                mSensorTagMonitor.stopMonitoring();
-            }
+                SensorTagMonitoring.resetMonitoringPeriods(mOutdoorWaitPeriod.get(),
+                        mScanPeriod.get());
+            }*/
+        }
 
+        /**
+         * Returns the period between two consecutive beacons scans.
+         */
+        public long getWaitPeriod() {
+            return mIndoorWaitPeriod.get();
+        }
+
+        /**
+         * Returns the period during which beacons scanning is done.
+         */
+        public long getScanPeriod() {
+            return mScanPeriod.get();
         }
     }
 }

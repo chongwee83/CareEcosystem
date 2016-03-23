@@ -41,7 +41,6 @@
         <activity android:name=".ui.admin.BeaconSetupActivity" />
         <activity android:name=".ui.admin.BeaconTestActivity" />
         <activity android:name=".ui.admin.ServerConfirmationActivity" />
-        <activity android:name=".ui.admin.RegisterSensorTagActivity" />
         <activity android:name=".ui.tester.TesterMenuActivity" />
         <activity android:name=".ui.tester.GroundTrustActivity" />
         <activity android:name=".ui.tester.ServicesActivity" />

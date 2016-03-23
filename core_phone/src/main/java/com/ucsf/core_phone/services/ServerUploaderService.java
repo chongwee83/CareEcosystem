@@ -47,12 +47,10 @@ public abstract class ServerUploaderService extends UploaderService {
     public static abstract class Provider extends UploaderService.Provider {
         //protected final ServerProtocol mProtocol = new ServerSecuredHttpsProtocol(SERVER_HOST);
         protected final ServerProtocol mProtocol = new ServerHttpsProtocol("198.199.116.85", 22, 8000, "root", "MoncaTLee");
-
         private int mIncr = 0;
         protected Provider(Context context, Class<? extends ServerUploaderService> serviceClass,
                            ServiceId service) {
-            //super(context, serviceClass, service, AlarmManager.INTERVAL_HALF_DAY);
-            super(context, serviceClass, service, AlarmManager.INTERVAL_FIFTEEN_MINUTES); //send every 15 minutes instead
+            super(context, serviceClass, service, AlarmManager.INTERVAL_HALF_DAY);
         }
 
         public abstract ServerListenerService.Provider getServerListenerServiceProvider();

@@ -128,7 +128,6 @@ public class ServerUploaderService extends com.ucsf.core_phone.services.ServerUp
             });
         }
 
-
         /**
          * Sends the given patient profile to the server.
          */
@@ -142,11 +141,11 @@ public class ServerUploaderService extends com.ucsf.core_phone.services.ServerUp
                         for (int i = 0; i < profile.rooms.length; ++i) {
                             final Room room = profile.rooms[i];
                             JSONObject roomObject = new JSONObject();
-                            roomObject.put(PatientProfile.KEY_ROOM_NAME, room.getRoomName());
-                            roomObject.put(PatientProfile.KEY_ROOM_IDX, i);
-                            roomObject.put(PatientProfile.KEY_MOTE_ID, room.getMoteId());
-                            roomObject.put(PatientProfile.KEY_CEILING_HEIGHT, room.getHeight());
-                            roomObject.put(PatientProfile.KEY_FLOOR, room.getFloor());
+                            roomObject.put(PatientProfile.KEY_ROOM_NAME       , room.getRoomName());
+                            roomObject.put(PatientProfile.KEY_ROOM_IDX        , i);
+                            roomObject.put(PatientProfile.KEY_MOTE_ID         , room.getMoteId());
+                            roomObject.put(PatientProfile.KEY_CEILING_HEIGHT  , room.getHeight());
+                            roomObject.put(PatientProfile.KEY_FLOOR           , room.getFloor());
                             roomObject.put(PatientProfile.KEY_X_DIST_FROM_PREV, room.getXDistanceFromPrevious());
                             roomObject.put(PatientProfile.KEY_Y_DIST_FROM_PREV, room.getYDistanceFromPrevious());
 
@@ -154,21 +153,21 @@ public class ServerUploaderService extends com.ucsf.core_phone.services.ServerUp
                         }
 
                         configObject = new JSONObject();
-                        configObject.put(DataManager.KEY_PATIENT_ID, profile.patientId);
+                        configObject.put(DataManager.KEY_PATIENT_ID        , profile.patientId);
                         configObject.put(PatientProfile.KEY_REGISTRATION_ID, token);
-                        configObject.put(PatientProfile.KEY_USERNAME, profile.username);
+                        configObject.put(PatientProfile.KEY_USERNAME       , profile.username);
                         configObject.put(PatientProfile.KEY_TALLEST_CEILING, profile.tallestCeilingHeight);
-                        configObject.put(PatientProfile.KEY_HOME_LATITUDE, profile.homeLatitude);
-                        configObject.put(PatientProfile.KEY_HOME_LONGITUDE, profile.homeLongitude);
-                        configObject.put(PatientProfile.KEY_ROOMS, roomsObject);
+                        configObject.put(PatientProfile.KEY_HOME_LATITUDE  , profile.homeLatitude);
+                        configObject.put(PatientProfile.KEY_HOME_LONGITUDE , profile.homeLongitude);
+                        configObject.put(PatientProfile.KEY_ROOMS          , roomsObject);
                         configObject.put(PatientProfile.KEY_START_TIMESTAMP, parseTimestamp(profile.setupStartTimestamp));
-                        configObject.put(PatientProfile.KEY_END_TIMESTAMP, parseTimestamp(profile.setupEndTimestamp));
+                        configObject.put(PatientProfile.KEY_END_TIMESTAMP  , parseTimestamp(profile.setupEndTimestamp));
                     } catch (Exception e) {
                         listener.onFailure("Failed to create configuration object: ", e);
                         return;
                     }
 
-                    Sender sender = new Sender(profile.patientId, DeviceLocation.PatientPhone);
+                    Sender sender   = new Sender(profile.patientId, DeviceLocation.PatientPhone);
                     String filename = makeServerFilename(sender, PatientProfile.KEY_PROFILE);
                     sendData(FileType.Config, filename, configObject, listener);
                 }
@@ -217,9 +216,6 @@ public class ServerUploaderService extends com.ucsf.core_phone.services.ServerUp
             mProtocol.execute(context, new Runnable() {
                 @Override
                 public void run() {
-
-                    Log.d(TAG,"Sending uncommitted database entries to the server.");
-
                     final EntryResponseHandler entryHandler = new EntryResponseHandler(listener);
 
                     Condition[] conditions = new Condition[3];
@@ -236,22 +232,17 @@ public class ServerUploaderService extends com.ucsf.core_phone.services.ServerUp
                         // Iterate through each tables and patients
                         StartupService.loadTables(context);
                         for (DataManager.Table table : getMonitoredTables()) {
-
-                            Log.d(TAG,"Committing table:\t" + table.tag + "\t" + table.toString());
-
                             FileType fileType = getFileType(table);
                             conditions[1] = table == SharedTables.GroundTrust.getTable(instance) ?
                                     startCond : timestampCond;
 
                             for (String profile : Settings.getPatientIDs(context)) {
-                                Log.d(TAG,"Patient profile:\t" + profile);
                                 conditions[2] = new Condition.Equal<>(DataManager.KEY_PATIENT_ID, profile);
                                 DataManager.Cursor cursor;
                                 while ((cursor = table.fetch(MAX_ENTRIES, conditions)) != null
                                         && cursor.moveToFirst()) {
                                     // Parse the table entry
                                     TableEntry entry = parseTableEntry(instance, table, cursor, profile);
-                                    Log.d(TAG,"TableEntry:\t" + entry.toString());
 
                                     // Push the entry to the server, if the file being uploaded is ground truth,
                                     // upload to the config directory on the server
@@ -437,40 +428,6 @@ public class ServerUploaderService extends com.ucsf.core_phone.services.ServerUp
             } while (entry.cursor.moveToNext());
         }
 
-
-        /*
-        The following method is added by Phoenix
-        */
-        private void parseSensorTagData(TableEntry entry) {
-            entry.tag = "SENSORTAG";
-
-            //Create table header
-            entry.addLine(String.format("%s[s] %s[s] %s[s] %s[f] %s[f] %s[f] %s[f]",
-                    DataManager.KEY_TIMESTAMP,
-                    SharedTables.SensorTag.KEY_SENSORTAG_ID,
-                    SharedTables.SensorTag.KEY_TYPE,
-                    SharedTables.SensorTag.KEY_READING_ALL,
-                    SharedTables.SensorTag.KEY_READING_X,
-                    SharedTables.SensorTag.KEY_READING_Y,
-                    SharedTables.SensorTag.KEY_READING_Z
-            ));
-
-            do{
-                entry.addLine(String.format("%s %s %s %f %f %f %f",
-                        parseTimestamp(entry.cursor),
-                        entry.cursor.getString(SharedTables.SensorTag.KEY_SENSORTAG_ID),
-                        entry.cursor.getString(SharedTables.SensorTag.KEY_TYPE),
-                        entry.cursor.getDouble(SharedTables.SensorTag.KEY_READING_ALL),
-                        entry.cursor.getDouble(SharedTables.SensorTag.KEY_READING_X),
-                        entry.cursor.getDouble(SharedTables.SensorTag.KEY_READING_Y),
-                        entry.cursor.getDouble(SharedTables.SensorTag.KEY_READING_Z)
-                ));
-
-            } while (entry.cursor.moveToNext());
-
-        }
-
-
         /**
          * Parses the given table entry.
          */
@@ -489,8 +446,6 @@ public class ServerUploaderService extends com.ucsf.core_phone.services.ServerUp
                 parseGPSData(entry);
             else if (table == SharedTables.GroundTrust.getTable(instance))
                 parseGroundTrustData(entry);
-            else if (table == SharedTables.SensorTag.getTable(instance))
-                parseSensorTagData(entry);
             else if (table == SharedTables.Logs.getTable(instance) ||
                     table == Settings.getPhoneLogsTable(instance))
                 parseLogs(entry);

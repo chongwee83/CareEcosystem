@@ -11,7 +11,6 @@ import com.ucsf.core.services.Services;
 import com.ucsf.core_phone.ui.widgets.HeaderView;
 import com.ucsf.security.AdminInstance;
 import com.ucsf.services.StartupService;
-import com.ucsf.ui.admin.RegisterSensorTagActivity;
 
 import net.hockeyapp.android.FeedbackManager;
 
@@ -72,16 +71,6 @@ public class StartScreenActivity extends Activity {
 
                 Intent intent = new Intent(StartScreenActivity.this, LoginActivity.class);
 
-                startActivity(intent);
-                return true;
-            }
-        });
-
-        ImageButton sensortagButton = (ImageButton) findViewById(R.id.button_sensortag_config);
-        sensortagButton.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                Intent intent = new Intent(StartScreenActivity.this, RegisterSensorTagActivity.class);
                 startActivity(intent);
                 return true;
             }
